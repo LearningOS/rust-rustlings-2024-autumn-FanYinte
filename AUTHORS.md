@@ -2,7 +2,7 @@
 
 This file lists the people that have contributed to this project.
 
-Excluded from this list are @carols10cents and @diannasoreil, the principal
+Excluded from this list are @carols10cents and @diannasoreil, the principcal
 authors.
 
 <!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
