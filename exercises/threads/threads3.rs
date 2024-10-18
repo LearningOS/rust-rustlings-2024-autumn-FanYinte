@@ -1,12 +1,4 @@
-// threads3.rs
-//
-// Execute `rustlings hint threads3` or use the `hint` watch subcommand for a
-// hint.
-
-// I AM NOT DONE
-
-use std::sync::mpsc;
-use std::sync::Arc;
+use std::sync::{mpsc, Arc, Mutex};
 use std::thread;
 use std::time::Duration;
 
@@ -26,26 +18,37 @@ impl Queue {
     }
 }
 
-fn send_tx(q: Queue, tx: mpsc::Sender<u32>) -> () {
+fn send_tx(q: Queue, tx: Arc<Mutex<mpsc::Sender<u32>>>) -> Vec<thread::JoinHandle<()>> {
     let qc = Arc::new(q);
+    let mut handles = vec![];
+
+    // First thread for the first_half
     let qc1 = Arc::clone(&qc);
-    let qc2 = Arc::clone(&qc);
-
-    thread::spawn(move || {
+    let tx1 = Arc::clone(&tx);
+    let handle1 = thread::spawn(move || {
         for val in &qc1.first_half {
+            let tx = tx1.lock().unwrap();
             println!("sending {:?}", val);
             tx.send(*val).unwrap();
             thread::sleep(Duration::from_secs(1));
         }
     });
+    handles.push(handle1);
 
-    thread::spawn(move || {
+    // Second thread for the second_half
+    let qc2 = Arc::clone(&qc);
+    let tx2 = Arc::clone(&tx);
+    let handle2 = thread::spawn(move || {
         for val in &qc2.second_half {
+            let tx = tx2.lock().unwrap();
             println!("sending {:?}", val);
             tx.send(*val).unwrap();
             thread::sleep(Duration::from_secs(1));
         }
     });
+    handles.push(handle2);
+
+    handles
 }
 
 fn main() {
@@ -53,7 +56,8 @@ fn main() {
     let queue = Queue::new();
     let queue_length = queue.length;
 
-    send_tx(queue, tx);
+    let tx = Arc::new(Mutex::new(tx));
+    let handles = send_tx(queue, tx);
 
     let mut total_received: u32 = 0;
     for received in rx {
@@ -61,6 +65,11 @@ fn main() {
         total_received += 1;
     }
 
+    // Wait for the sender threads to finish
+    for handle in handles {
+        handle.join().unwrap();
+    }
+
     println!("total numbers received: {}", total_received);
-    assert_eq!(total_received, queue_length)
+    assert_eq!(total_received, queue_length);
 }

@@ -5,9 +5,10 @@
 // Execute `rustlings hint macros3` or use the `hint` watch subcommand for a
 // hint.
 
-// I AM NOT DONE
+
 
 mod macros {
+    #[macro_export] // Makes the macro available outside the module
     macro_rules! my_macro {
         () => {
             println!("Check out my macro!");
@@ -16,5 +17,5 @@ mod macros {
 }
 
 fn main() {
-    my_macro!();
+    my_macro!(); // Now you can call the macro directly
 }
